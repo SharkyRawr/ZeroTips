@@ -1,3 +1,5 @@
+from log import logger
+
 # Django specific settings
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
@@ -8,9 +10,10 @@ from django.core.wsgi import get_wsgi_application
 application = get_wsgi_application()
 
 # Your application specific imports
-from models.models import User, TipAction, TIPSTATE_INVALID
+from models.models import User, TipAction, TipState
 
 
+logger.debug("Logging in to reddit user %s ...", settings.REDDIT_USERNAME)
 import praw
 reddit = praw.Reddit(client_id=settings.REDDIT_ID, client_secret=settings.REDDIT_SECRET, user_agent="ZeroTipsPy",
                      username=settings.REDDIT_USERNAME, password=settings.REDDIT_PASSWORD)
@@ -32,7 +35,7 @@ def main():
         # Check if we need to handle this comment
         ta = TipAction.objects.filter(reddit_id=cid).first()
         if ta is not None:
-            print(cid, "already handled")
+            logger.info("%s already handled", cid)
             return
 
         tipfrom = normname(str(comment.author))
@@ -48,23 +51,23 @@ def main():
         sender = User.objects.filter(name=tipfrom).first()
         if sender is None:
             sender = User(name=tipfrom)
-        print(sender)
+        #print(sender)
         sender.save()
 
         recipient = User.objects.filter(name=tipto).first()
         if recipient is None:
             recipient = User(name=tipto)
-        print(recipient)
+        #print(recipient)
         recipient.save()
 
         ta = TipAction(reddit_id=cid, sender=sender, recipient=recipient, amount=amount, currency=currency)
 
         if sender == recipient:
-            ta.state = TIPSTATE_INVALID
+            ta.state = TipState.Invalid
 
         ta.save()
 
-        print("[%s] Tip from: %s to %s with amount %s" % (cid, tipfrom, tipto, amount))
+        logger.info(str(ta))
         
 
 if __name__ == '__main__':

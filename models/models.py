@@ -1,23 +1,40 @@
 from django.db import models
 
-TIPSTATE_HANDLED = 'handled'
-TIPSTATE_PENDING = 'pending'
-TIPSTATE_INVALID = 'invalid'
+class TipState(object):
+	Handled = 'handled'
+	Pending = 'pending'
+	Invalid = 'invalid'
 
-class User(models.Model):
+class AutoTimestampModel(models.Model):
+	class Meta:
+		abstract = True
+
+	created = models.DateTimeField(auto_now_add=True, blank=True)
+	edited = models.DateTimeField(auto_now=True, blank=True)
+
+class User(AutoTimestampModel, models.Model):
 	name = models.CharField(max_length=64, unique=True)
 	tipaddress = models.CharField(max_length=128, null=True)
+	
 
-class TipAction(models.Model):
+class TipAction(AutoTimestampModel, models.Model):
 	reddit_id = models.CharField(max_length=32)
 	sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tips_sent")
 	recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name="tips_received")
 	amount = models.DecimalField(max_digits=16, decimal_places=8)
 	currency = models.CharField(max_length=8)
+	created = models.DateTimeField(auto_now_add=True, blank=True)
+	edited = models.DateTimeField(auto_now=True, blank=True)
 
 	STATE_CHOICES = (
-		(TIPSTATE_HANDLED, 'handled'),
-		(TIPSTATE_INVALID, 'invalid'),
-		(TIPSTATE_PENDING, 'pending')
+		(TipState.Handled, 'handled'),
+		(TipState.Invalid, 'invalid'),
+		(TipState.Pending, 'pending')
 	)
-	state = models.CharField(max_length=16, choices=STATE_CHOICES, default=TIPSTATE_PENDING)
+	state = models.CharField(max_length=16, choices=STATE_CHOICES, default=TipState.Pending)
+
+	def __str__(self):
+		return "[%s/%s] tip from '%s' to '%s' amount %f %s" % ( 
+			self.reddit_id, self.state, self.sender.name, self.recipient.name,
+			self.amount, self.currency
+		)
