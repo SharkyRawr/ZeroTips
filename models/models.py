@@ -16,6 +16,12 @@ class User(AutoTimestampModel, models.Model):
 	name = models.CharField(max_length=64, unique=True)
 	tipaddress = models.CharField(max_length=128, null=True)
 	
+	@staticmethod
+	def find_by_user_addr(name, address):
+		u = User.objects.filter(name=name, tipaddress=address).first()
+		if u is None:
+			u = User(name=name, tipaddress=address)
+		return u
 
 class TipAction(AutoTimestampModel, models.Model):
 	reddit_id = models.CharField(max_length=32)
