@@ -8,7 +8,6 @@ class TipState(object):
 class AutoTimestampModel(models.Model):
 	class Meta:
 		abstract = True
-
 	created = models.DateTimeField(auto_now_add=True, blank=True)
 	edited = models.DateTimeField(auto_now=True, blank=True)
 

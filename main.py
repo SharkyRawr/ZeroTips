@@ -66,12 +66,14 @@ def handle_message(message):
     body = message.body
     
     if body == "help":
-        message.reply("Hey there, this bot is still under development. Give me a few days to hammer out the details (like this help message). <3");
+        with open('txt/help.md') as f:
+            message.reply(f.read())
         return True
 
     words = re.split(r'\s+', comment.body)
     
     if words[0] == 'address':
+        # Set my crypto address
         addr = words[1]
         user = User.find_by_user_addr(message.author.name, addr)
 
